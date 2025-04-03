@@ -1,0 +1,24 @@
+# Menggunakan format versi 3.8 untuk Docker Compose
+version: '3.8'
+
+services:
+  # Layanan utama: Aplikasi Node.js
+  item-app:
+    image: ghcr.io/m4rhz/item-app:v1  # Menggunakan image dari GHCR
+    ports:
+      - 80:8080  # Mapping port agar dapat diakses dari luar
+    depends_on:
+      - item-db  # Pastikan database berjalan sebelum aplikasi dimulai
+    restart: always  # Selalu restart jika terjadi crash
+
+  # Layanan database MongoDB
+  item-db:
+    image: mongo:3  # Menggunakan versi 3 dari MongoDB
+    volumes:
+      - app-db:/data/db  # Menghubungkan volume untuk penyimpanan data
+    restart: always  # Restart otomatis jika gagal
+
+# Volume untuk menyimpan data database secara persisten
+volumes:
+  app-db:
+
