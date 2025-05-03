@@ -2,7 +2,7 @@ module github.com/nothinux/karsajobs
 
 go 1.22
 
-toolchain go1.22.2
+// toolchain go1.22.2
 
 require (
 	github.com/go-chi/chi v1.5.1
