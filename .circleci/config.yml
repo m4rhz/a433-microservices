@@ -1,42 +1,40 @@
-version: 2.1
+version: 2.1  # Versi konfigurasi CircleCI
 
 jobs:
-  lint-dockerfile:
+  lint-dockerfile:  # Job untuk linting Dockerfile pada UI project
     docker:
-      - image: cimg/base:stable
+      - image: cimg/base:stable  # Image dasar Linux dari CircleCI
     steps:
-      - checkout
+      - checkout  # Clone source code
       - run:
-          name: Install hadolint
+          name: Install hadolint  # Nama step
           command: |
             wget -q -O hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
-            chmod +x hadolint
-            sudo mv hadolint /usr/local/bin/
+            chmod +x hadolint  # Ubah permission supaya executable
+            sudo mv hadolint /usr/local/bin/  # Pindah ke PATH
       - run:
-          name: Lint Dockerfile
+          name: Lint Dockerfile  # Step linting Dockerfile
           command: hadolint Dockerfile
 
-  build-app-karsajobs-ui:
+  build-app-karsajobs-ui:  # Job untuk build & push Docker image frontend ke GitHub Packages
     docker:
       - image: cimg/base:stable
     steps:
-      - checkout
-      - setup_remote_docker
+      - checkout  # Clone repo
+      - setup_remote_docker  # Aktifkan Docker remote
       - run:
           name: Build and Push Docker Image to GitHub Packages
           command: |
-            IMAGE=ghcr.io/${CIRCLE_PROJECT_USERNAME}/karsajobs-ui:latest
-            echo $GHCR_TOKEN | docker login ghcr.io -u $CIRCLE_PROJECT_USERNAME --password-stdin
-            docker build -t $IMAGE .
-            docker push $IMAGE
+            IMAGE=ghcr.io/${CIRCLE_PROJECT_USERNAME}/karsajobs-ui:latest  # Format nama image frontend
+            echo $GHCR_TOKEN | docker login ghcr.io -u $CIRCLE_PROJECT_USERNAME --password-stdin  # Login ke GitHub CR
+            docker build -t $IMAGE .  # Build image dari Dockerfile
+            docker push $IMAGE  # Push ke GitHub Packages
 
 workflows:
-  version: 2
-  frontend_pipeline:
+  version: 2  # Versi workflow
+  frontend_pipeline:  # Workflow untuk frontend
     jobs:
-      - lint-dockerfile
-      - build-app-karsajobs-ui:
+      - lint-dockerfile  # Jalankan linting dulu
+      - build-app-karsajobs-ui:  # Build hanya jika linting sukses
           requires:
             - lint-dockerfile
-
-# Test
