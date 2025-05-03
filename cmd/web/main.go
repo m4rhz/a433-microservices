@@ -11,6 +11,7 @@ import (
 	"github.com/nothinux/karsajobs/pkg/models/mongodb"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type application struct {
@@ -37,6 +38,15 @@ func main() {
 		},
 		counter: &count,
 	}
+
+	go func() {
+		metricsPort := ":2112"
+		log.Printf("metrics endpoint running on %s", metricsPort)
+		http.Handle("/metrics", promhttp.Handler())
+		if err := http.ListenAndServe(metricsPort, nil); err != nil {
+			log.Fatalf("metrics server error: %v", err)
+		}
+	}()
 
 	log.Printf("application running on port %s", os.Getenv("APP_PORT"))
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", os.Getenv("APP_PORT")), app.routes()); err != nil {
