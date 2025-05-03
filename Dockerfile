@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine
+FROM golang:1.22-alpine
 
 WORKDIR /go/src/github.com/dicodingacademy/karsajobs
 ENV GO111MODULE=on
