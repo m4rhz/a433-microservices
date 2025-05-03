@@ -1,52 +1,51 @@
-version: 2.1
+version: 2.1  # Versi konfigurasi CircleCI yang digunakan (v2.1 mendukung workflows dan reusable config)
 
 jobs:
-  lint-dockerfile:
+  lint-dockerfile:  # Job pertama untuk melakukan linting pada Dockerfile
     docker:
-      - image: cimg/base:stable
+      - image: cimg/base:stable  # Menggunakan image dasar CircleCI berbasis Linux
     steps:
-      - checkout
+      - checkout  # Mengambil source code dari branch saat ini
       - run:
-          name: Install hadolint
-          command: |
+          name: Install hadolint  # Memberi nama pada step ini
+          command: |  # Perintah shell untuk menginstall hadolint secara manual
             wget -q -O hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
-            chmod +x hadolint
-            sudo mv hadolint /usr/local/bin/
+            chmod +x hadolint  # Memberi hak eksekusi
+            sudo mv hadolint /usr/local/bin/  # Memindahkan binary ke PATH agar bisa dipanggil global
       - run:
-          name: Lint Dockerfile
-          command: hadolint Dockerfile
+          name: Lint Dockerfile  # Menamai step lint
+          command: hadolint Dockerfile  # Mengecek apakah Dockerfile sudah sesuai best practices
 
-  test-app:
+  test-app:  # Job untuk menjalankan unit testing aplikasi Go
     docker:
-      - image: cimg/go:1.21
+      - image: cimg/go:1.21  # Menggunakan image resmi CircleCI dengan Go versi 1.21
     steps:
-      - checkout
+      - checkout  # Mengambil source code
       - run:
-          name: Run unit tests
-          command: go test -v -short --count=1 $(go list ./...)
+          name: Run unit tests  # Step menjalankan unit test
+          command: go test -v -short --count=1 $(go list ./...)  # Menjalankan semua test package secara verbose, hanya sekali
 
-  build-app-karsajobs:
+  build-app-karsajobs:  # Job untuk build dan push Docker image ke GitHub Container Registry
     docker:
-      - image: cimg/base:stable
+      - image: cimg/base:stable  # Menggunakan image dasar
     steps:
-      - checkout
-      - setup_remote_docker
+      - checkout  # Mengambil source code
+      - setup_remote_docker  # Mengaktifkan Docker engine remote agar bisa melakukan build image
       - run:
-          name: Build and Push Docker Image to GitHub Packages
+          name: Build and Push Docker Image to GitHub Packages  # Nama step
           command: |
-            IMAGE=ghcr.io/${CIRCLE_PROJECT_USERNAME}/karsajobs:latest
-            echo $GHCR_TOKEN | docker login ghcr.io -u $CIRCLE_PROJECT_USERNAME --password-stdin
-            docker build -t $IMAGE .
-            docker push $IMAGE
+            IMAGE=ghcr.io/${CIRCLE_PROJECT_USERNAME}/karsajobs:latest  # Menentukan nama image dengan namespace GitHub
+            echo $GHCR_TOKEN | docker login ghcr.io -u $CIRCLE_PROJECT_USERNAME --password-stdin  # Login ke GitHub Packages
+            docker build -t $IMAGE .  # Build image dari Dockerfile di root
+            docker push $IMAGE  # Push image ke GitHub Packages
 
 workflows:
-  version: 2
-  backend_pipeline:
+  version: 2  # Versi workflow CircleCI
+  backend_pipeline:  # Nama workflow backend
     jobs:
-      - lint-dockerfile
-      - test-app
-      - build-app-karsajobs:
+      - lint-dockerfile  # Menjalankan linting terlebih dahulu
+      - test-app  # Lanjut unit test
+      - build-app-karsajobs:  # Build hanya jika linting dan test berhasil
           requires:
             - lint-dockerfile
             - test-app
-
